@@ -1,0 +1,32 @@
+import mongoose from "mongoose";
+
+const serviceSchema = new mongoose.Schema(
+  {
+    sector: String,
+    service: String,
+    resource: String,
+    peopleServed: Number,
+    employee: String,
+    date: Date,
+    remark: String,
+  },
+  { _id: false },
+);
+
+const reportSchema = new mongoose.Schema(
+  {
+    coordinatorName: String,
+    coordinatorDate: Date,
+    signature: String,
+
+    services: [serviceSchema],
+
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  },
+  { timestamps: true },
+);
+
+export default mongoose.model("Report", reportSchema);
