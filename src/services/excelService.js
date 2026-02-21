@@ -1,6 +1,6 @@
-
 import XLSX from "xlsx";
 import path from "path";
+import { UPLOAD_DIR } from "../utils/uploadPath.js";
 
 export const generateExcel = (report, fileName) => {
   const rows = report.services.map((s, i) => ({
@@ -31,8 +31,10 @@ export const generateExcel = (report, fileName) => {
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "Gabaasaa");
 
- const filePath = path.join(process.cwd(), "uploads", `${fileName}.xlsx`);
+  // const filePath = path.join(process.cwd(), "uploads", `${fileName}.xlsx`);
 
+  const filePath = path.join(UPLOAD_DIR, fileName);
+  
   XLSX.writeFile(workbook, filePath);
 
   return filePath;
