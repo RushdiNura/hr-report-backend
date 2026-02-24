@@ -13,6 +13,7 @@
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
+    "docx": "^9.5.3",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "fs": "^0.0.1-security",
@@ -21,7 +22,9 @@
     "mongoose": "^9.2.1",
     "multer": "^2.0.2",
     "path": "^0.12.7",
+    "socket.io": "^4.8.3",
     "url": "^0.11.4",
+    "uuid": "^13.0.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
