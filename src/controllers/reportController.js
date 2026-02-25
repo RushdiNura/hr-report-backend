@@ -42,17 +42,17 @@ export const createReport = async (req, res) => {
     // );
 
     const generatedFileName = `Gabaasaa_${Date.now()}.docx`;
-   await generateWord(
-     {
-       coordinatorName,
-       coordinatorDate,
-       signatureImagePath: signatureFileName
-         ? path.join("uploads/signatures", signatureFileName)
-         : null,
-       services: parsedServices,
-     },
-     generatedFileName,
-   );
+    await generateWord(
+      {
+        coordinatorName,
+        coordinatorDate,
+        signatureImagePath: signatureFileName
+          ? path.join(process.cwd(), "uploads", "signatures", signatureFileName)
+          : null,
+        services: parsedServices,
+      },
+      generatedFileName,
+    );
     // await generateWord(
     //   {
     //     coordinatorName,
