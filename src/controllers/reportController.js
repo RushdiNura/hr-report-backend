@@ -46,7 +46,9 @@ export const createReport = async (req, res) => {
      {
        coordinatorName,
        coordinatorDate,
-       signature: signatureFileName || "", // ✔ only filename
+       signatureImagePath: signatureFileName
+         ? path.join("uploads/signatures", signatureFileName)
+         : null,
        services: parsedServices,
      },
      generatedFileName,

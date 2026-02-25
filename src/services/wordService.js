@@ -1,5 +1,3 @@
-import fs from "fs";
-import path from "path";
 import {
   Document,
   Packer,
@@ -9,116 +7,94 @@ import {
   TableCell,
   WidthType,
   AlignmentType,
-  BorderStyle,
   VerticalAlign,
   ImageRun,
-  TextRun,
 } from "docx";
+import fs from "fs";
+import path from "path";
+import { UPLOAD_DIR } from "../utils/uploadPath.js";
 
 export const generateWord = async (report, fileName) => {
-  const headers = [
-    "Lakk",
-    "Sektara Tajaajila Kenne",
-    "Tajaajila Kenname",
-    "Fooda",
-    "Bayyina Namoota Tajaajilamni",
-    "Hojjeta Taj. Kenne",
-    "Guyyaa",
-    "Ibsa",
-  ];
+  // TEMPLATE COLUMN WIDTHS (match your docx)
+  const colWidths = [6, 20, 20, 10, 15, 15, 10, 14];
 
-  // Exact column widths from template
-  const colWidths = [6, 20, 20, 10, 18, 12, 8, 6];
-
+  // HEADER
   const headerRow = new TableRow({
-    height: { value: 400, rule: "exact" },
-    children: headers.map((h, i) =>
-      new TableCell({
-        width: { size: colWidths[i], type: WidthType.PERCENTAGE },
-        verticalAlign: VerticalAlign.CENTER,
-        borders: border05(),
-        children: [
-          new Paragraph({
-            alignment: AlignmentType.CENTER,
-            children: [
-              new TextRun({
-                text: h,
-                bold: true,
-                font: "Times New Roman",
-                size: 24,
-              }),
-            ],
-          }),
-        ],
-      }),
+    children: [
+      "Lakk",
+      "Sektara",
+      "Tajaajila Kenne",
+      "Fooda",
+      "Bayyina Namoota",
+      "Hojjeta Taj. Kenne",
+      "Guyyaa",
+      "Ibsa",
+    ].map(
+      (text, i) =>
+        new TableCell({
+          width: { size: colWidths[i], type: WidthType.PERCENTAGE },
+          verticalAlign: VerticalAlign.CENTER,
+          children: [
+            new Paragraph({
+              text,
+              bold: true,
+              alignment: AlignmentType.CENTER,
+            }),
+          ],
+        }),
     ),
   });
 
-  const dataRows = (report.services || []).map((s, i) =>
-    new TableRow({
-      height: { value: 360, rule: "atLeast" },
+  // BODY ROWS — dynamic (your content)
+  const bodyRows = report.services.map((s, i) => {
+    return new TableRow({
       children: [
-        cellCenter(i + 1),
-        cellLeft(s.sector),
-        cellLeft(s.service),
-        cellLeft(s.resource),
-        cellCenter(s.peopleServed),
-        cellLeft(s.employee),
-        cellCenter(formatDate(s.date)),
-        cellLeft(s.remark),
-      ],
-    }),
-  );
+        i + 1,
+        s.sector || "",
+        s.service || "",
+        s.resource || "",
+        s.peopleServed || "",
+        s.employee || "",
+        s.date || "",
+        s.remark || "",
+      ].map(
+        (val, c) =>
+          new TableCell({
+            width: { size: colWidths[c], type: WidthType.PERCENTAGE },
+            verticalAlign: VerticalAlign.CENTER,
+            children: [
+              new Paragraph({
+                text: String(val),
+              }),
+            ],
+          }),
+      ),
+    });
+  });
 
   const table = new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
-    rows: [headerRow, ...dataRows],
+    rows: [headerRow, ...bodyRows],
   });
 
-  // Signature
-  let signaturePara;
+  // SIGNATURE IMAGE
+  let signatureBlock;
 
-  if (report.signature) {
-    const sigPath = path.join(
-      process.cwd(),
-      "uploads",
-      "signatures",
-      report.signature,
-    );
+  if (report.signatureImagePath && fs.existsSync(report.signatureImagePath)) {
+    const img = fs.readFileSync(report.signatureImagePath);
 
-    if (fs.existsSync(sigPath)) {
-      const img = fs.readFileSync(sigPath);
-
-      signaturePara = new Paragraph({
-        spacing: { before: 120 },
-        children: [
-          new TextRun({
-            text: "Mallattoo: ",
-            font: "Times New Roman",
-            size: 24,
-          }),
-          new ImageRun({
-            data: img,
-            transformation: {
-              width: 170,
-              height: 70,
-            },
-          }),
-        ],
-      });
-    }
-  }
-
-  if (!signaturePara) {
-    signaturePara = new Paragraph({
-      spacing: { before: 120 },
+    signatureBlock = new Paragraph({
       children: [
-        new TextRun({
-          text: "Mallattoo: ______________________",
-          font: "Times New Roman",
-          size: 24,
+        new ImageRun({
+          data: img,
+          transformation: { width: 120, height: 50 },
         }),
       ],
+      spacing: { before: 50 },
+    });
+  } else {
+    signatureBlock = new Paragraph("________________", {
+      spacing: { before: 50 },
     });
   }
 
@@ -127,97 +103,34 @@ export const generateWord = async (report, fileName) => {
       {
         properties: {
           page: {
-            margin: {
-              top: 1440,
-              bottom: 1440,
-              left: 1440,
-              right: 1440,
-            },
+            margin: { top: 720, bottom: 720, left: 720, right: 720 },
           },
         },
         children: [
           table,
-          new Paragraph(""),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: `Maqaa Qindeessaa: ${report.coordinatorName || ""}`,
-                font: "Times New Roman",
-                size: 24,
-              }),
-            ],
+
+          // spacing after table (template match)
+          new Paragraph({ text: "", spacing: { after: 200 } }),
+
+          new Paragraph(`Maqaa Qindeessaa  ${report.coordinatorName || ""}`, {
+            spacing: { after: 100 },
           }),
-          new Paragraph({
-            children: [
-              new TextRun({
-                text: `Guyyaa: ${formatDate(report.coordinatorDate) || ""}`,
-                font: "Times New Roman",
-                size: 24,
-              }),
-            ],
+
+          new Paragraph(`Guyyaa            ${report.coordinatorDate || ""}`, {
+            spacing: { after: 100 },
           }),
-          signaturePara,
+
+          new Paragraph("Mallattoo", { spacing: { after: 50 } }),
+
+          signatureBlock,
         ],
       },
     ],
   });
 
   const buffer = await Packer.toBuffer(doc);
-  const filePath = path.join(process.cwd(), "uploads", fileName);
+  const filePath = path.join(UPLOAD_DIR, fileName);
   fs.writeFileSync(filePath, buffer);
 
   return filePath;
 };
-
-// helpers
-function border05() {
-  return {
-    top: { style: BorderStyle.SINGLE, size: 4 },
-    bottom: { style: BorderStyle.SINGLE, size: 4 },
-    left: { style: BorderStyle.SINGLE, size: 4 },
-    right: { style: BorderStyle.SINGLE, size: 4 },
-  };
-}
-
-function cellLeft(text) {
-  return new TableCell({
-    verticalAlign: VerticalAlign.CENTER,
-    borders: border05(),
-    children: [
-      new Paragraph({
-        children: [
-          new TextRun({
-            text: String(text || ""),
-            font: "Times New Roman",
-            size: 24,
-          }),
-        ],
-      }),
-    ],
-  });
-}
-
-function cellCenter(text) {
-  return new TableCell({
-    verticalAlign: VerticalAlign.CENTER,
-    borders: border05(),
-    children: [
-      new Paragraph({
-        alignment: AlignmentType.CENTER,
-        children: [
-          new TextRun({
-            text: String(text || ""),
-            font: "Times New Roman",
-            size: 24,
-          }),
-        ],
-      }),
-    ],
-  });
-}
-
-function formatDate(d) {
-  if (!d) return "";
-  const date = new Date(d);
-  return date.toISOString().split("T")[0];
-}
