@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Create signatures directory if it doesn't exist
+
 const signaturesDir = path.join(process.cwd(), "uploads", "signatures");
 if (!fs.existsSync(signaturesDir)) {
   fs.mkdirSync(signaturesDir, { recursive: true });

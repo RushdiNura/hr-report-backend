@@ -19,11 +19,6 @@ export const createReport = async (req, res) => {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    // let parsedServices = services;
-    // if (typeof services === "string") {
-    //   parsedServices = JSON.parse(services);
-    // }
-
     const parsedServices =
       typeof services === "string" ? JSON.parse(services) : services;
 
@@ -47,17 +42,26 @@ export const createReport = async (req, res) => {
     // );
 
     const generatedFileName = `Gabaasaa_${Date.now()}.docx`;
-    await generateWord(
-      {
-        coordinatorName,
-        coordinatorDate,
-        signature: signatureFileName
-          ? `/files/signatures/${signatureFileName}`
-          : "",
-        services: parsedServices,
-      },
-      generatedFileName,
-    );
+   await generateWord(
+     {
+       coordinatorName,
+       coordinatorDate,
+       signature: signatureFileName || "", // ✔ only filename
+       services: parsedServices,
+     },
+     generatedFileName,
+   );
+    // await generateWord(
+    //   {
+    //     coordinatorName,
+    //     coordinatorDate,
+    //     signature: signatureFileName
+    //       ? `/files/signatures/${signatureFileName}`
+    //       : "",
+    //     services: parsedServices,
+    //   },
+    //   generatedFileName,
+    // );
     // uploaded file
     const uploadedFileName = req.file ? req.file.filename : null;
 

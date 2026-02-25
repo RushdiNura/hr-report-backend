@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import {
   Document,
   Packer,
@@ -6,74 +8,100 @@ import {
   TableRow,
   TableCell,
   WidthType,
+  AlignmentType,
+  BorderStyle,
+  VerticalAlign,
   ImageRun,
+  TextRun,
 } from "docx";
-import fs from "fs";
-import path from "path";
-import { UPLOAD_DIR } from "../utils/uploadPath.js";
 
 export const generateWord = async (report, fileName) => {
-  const rows = report.services.map(
-    (s, i) =>
-      new TableRow({
+  const headers = [
+    "Lakk",
+    "Sektara Tajaajila Kenne",
+    "Tajaajila Kenname",
+    "Fooda",
+    "Bayyina Namoota Tajaajilamni",
+    "Hojjeta Taj. Kenne",
+    "Guyyaa",
+    "Ibsa",
+  ];
+
+  // Exact column widths from template
+  const colWidths = [6, 20, 20, 10, 18, 12, 8, 6];
+
+  const headerRow = new TableRow({
+    height: { value: 400, rule: "exact" },
+    children: headers.map((h, i) =>
+      new TableCell({
+        width: { size: colWidths[i], type: WidthType.PERCENTAGE },
+        verticalAlign: VerticalAlign.CENTER,
+        borders: border05(),
         children: [
-          new TableCell({ children: [new Paragraph(String(i + 1))] }),
-          new TableCell({ children: [new Paragraph(s.sector || "")] }),
-          new TableCell({ children: [new Paragraph(s.service || "")] }),
-          new TableCell({ children: [new Paragraph(s.resource || "")] }),
-          new TableCell({
-            children: [new Paragraph(String(s.peopleServed || ""))],
+          new Paragraph({
+            alignment: AlignmentType.CENTER,
+            children: [
+              new TextRun({
+                text: h,
+                bold: true,
+                font: "Times New Roman",
+                size: 24,
+              }),
+            ],
           }),
-          new TableCell({ children: [new Paragraph(s.employee || "")] }),
-          new TableCell({ children: [new Paragraph(s.date || "")] }),
-          new TableCell({ children: [new Paragraph(s.remark || "")] }),
         ],
       }),
+    ),
+  });
+
+  const dataRows = (report.services || []).map((s, i) =>
+    new TableRow({
+      height: { value: 360, rule: "atLeast" },
+      children: [
+        cellCenter(i + 1),
+        cellLeft(s.sector),
+        cellLeft(s.service),
+        cellLeft(s.resource),
+        cellCenter(s.peopleServed),
+        cellLeft(s.employee),
+        cellCenter(formatDate(s.date)),
+        cellLeft(s.remark),
+      ],
+    }),
   );
 
   const table = new Table({
     width: { size: 100, type: WidthType.PERCENTAGE },
-    rows: [
-      new TableRow({
-        children: [
-          "Lakk",
-          "Sektara",
-          "Tajaajila",
-          "Fooda",
-          "Bayyina",
-          "Hojjeta",
-          "Guyyaa",
-          "Ibsa",
-        ].map(
-          (h) =>
-            new TableCell({
-              children: [new Paragraph({ text: h, bold: true })],
-            }),
-        ),
-      }),
-      ...rows,
-    ],
+    rows: [headerRow, ...dataRows],
   });
 
-  // ===== SIGNATURE IMAGE =====
-  let signatureParagraph = new Paragraph("");
+  // Signature
+  let signaturePara;
 
   if (report.signature) {
     const sigPath = path.join(
       process.cwd(),
-      report.signature.replace("/files/", "uploads/"),
+      "uploads",
+      "signatures",
+      report.signature,
     );
 
     if (fs.existsSync(sigPath)) {
-      const image = fs.readFileSync(sigPath);
+      const img = fs.readFileSync(sigPath);
 
-      signatureParagraph = new Paragraph({
+      signaturePara = new Paragraph({
+        spacing: { before: 120 },
         children: [
+          new TextRun({
+            text: "Mallattoo: ",
+            font: "Times New Roman",
+            size: 24,
+          }),
           new ImageRun({
-            data: image,
+            data: img,
             transformation: {
-              width: 120,
-              height: 60,
+              width: 170,
+              height: 70,
             },
           }),
         ],
@@ -81,24 +109,115 @@ export const generateWord = async (report, fileName) => {
     }
   }
 
+  if (!signaturePara) {
+    signaturePara = new Paragraph({
+      spacing: { before: 120 },
+      children: [
+        new TextRun({
+          text: "Mallattoo: ______________________",
+          font: "Times New Roman",
+          size: 24,
+        }),
+      ],
+    });
+  }
+
   const doc = new Document({
     sections: [
       {
+        properties: {
+          page: {
+            margin: {
+              top: 1440,
+              bottom: 1440,
+              left: 1440,
+              right: 1440,
+            },
+          },
+        },
         children: [
           table,
           new Paragraph(""),
-          new Paragraph(`Maqaa Qindeessaa: ${report.coordinatorName || ""}`),
-          new Paragraph(`Guyyaa: ${report.coordinatorDate || ""}`),
-          signatureParagraph,
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Maqaa Qindeessaa: ${report.coordinatorName || ""}`,
+                font: "Times New Roman",
+                size: 24,
+              }),
+            ],
+          }),
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `Guyyaa: ${formatDate(report.coordinatorDate) || ""}`,
+                font: "Times New Roman",
+                size: 24,
+              }),
+            ],
+          }),
+          signaturePara,
         ],
       },
     ],
   });
 
   const buffer = await Packer.toBuffer(doc);
-  const filePath = path.join(UPLOAD_DIR, fileName);
-
+  const filePath = path.join(process.cwd(), "uploads", fileName);
   fs.writeFileSync(filePath, buffer);
 
   return filePath;
 };
+
+// helpers
+function border05() {
+  return {
+    top: { style: BorderStyle.SINGLE, size: 4 },
+    bottom: { style: BorderStyle.SINGLE, size: 4 },
+    left: { style: BorderStyle.SINGLE, size: 4 },
+    right: { style: BorderStyle.SINGLE, size: 4 },
+  };
+}
+
+function cellLeft(text) {
+  return new TableCell({
+    verticalAlign: VerticalAlign.CENTER,
+    borders: border05(),
+    children: [
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: String(text || ""),
+            font: "Times New Roman",
+            size: 24,
+          }),
+        ],
+      }),
+    ],
+  });
+}
+
+function cellCenter(text) {
+  return new TableCell({
+    verticalAlign: VerticalAlign.CENTER,
+    borders: border05(),
+    children: [
+      new Paragraph({
+        alignment: AlignmentType.CENTER,
+        children: [
+          new TextRun({
+            text: String(text || ""),
+            font: "Times New Roman",
+            size: 24,
+          }),
+        ],
+      }),
+    ],
+  });
+}
+
+function formatDate(d) {
+  if (!d) return "";
+  const date = new Date(d);
+  return date.toISOString().split("T")[0];
+}
