@@ -4,22 +4,32 @@ import jwt from "jsonwebtoken";
 
 export const register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, qindeessaa } = req.body;
 
     const exists = await User.findOne({ email });
-    if (exists) return res.status(400).json({ message: "User exists" });
+    if (exists) return res.status(400).json({ message: "User already exists" });
 
     const hashed = await bcrypt.hash(password, 10);
 
-    const user = await User.create({
+    // Prepare user object
+    const userFields = {
       name,
       email,
       password: hashed,
-      role,
-      qindeessaa: qindeessaa || "foddaa1",
-    });
+      role: role || "head", // Default to head if not specified in Postman
+    };
 
-    res.json({ message: "Qindeessaa created successfully" });
+    // Only assign qindeessaa if the user is NOT an HR
+    if (userFields.role !== "hr") {
+      userFields.qindeessaa = qindeessaa || "foddaa1";
+    }
+
+    const user = await User.create(userFields);
+
+    res.status(201).json({
+      message: `${user.role.toUpperCase()} created successfully`,
+      user: { id: user._id, email: user.email, role: user.role },
+    });
   } catch (e) {
     res.status(500).json({ message: e.message });
   }
@@ -45,8 +55,17 @@ export const login = async (req, res) => {
       token,
       role: user.role,
       name: user.name,
-      qindeessaa: user.qindeessaa,
+      // If HR, this will naturally be undefined/null in the DB
+      qindeessaa: user.qindeessaa || null,
     });
+  } catch (e) {
+    res.status(500).json({ message: e.message });
+  }
+};
+
+export const logout = async (req, res) => {
+  try {
+    res.json({ message: "Logged out successfully" });
   } catch (e) {
     res.status(500).json({ message: e.message });
   }

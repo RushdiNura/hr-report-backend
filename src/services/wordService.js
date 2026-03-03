@@ -1,5 +1,4 @@
 // import {
-
 //   Document,
 //   Packer,
 //   Paragraph,
@@ -18,7 +17,6 @@
 
 // export const generateWord = async (report, fileName) => {
 //   try {
-
 //     const validServices = report.services.filter(
 //       (s) => s.sector || s.service || s.employee,
 //     );
@@ -38,6 +36,7 @@
 //             },
 //           ];
 
+//     // Create header row with bold text only (no background)
 //     const headerRow = new TableRow({
 //       children: [
 //         "Lakk",
@@ -58,9 +57,6 @@
 //                 alignment: AlignmentType.CENTER,
 //               }),
 //             ],
-//             shading: {
-//               fill: "E6F0FA",
-//             },
 //             verticalAlign: VerticalAlign.CENTER,
 //             borders: {
 //               top: { style: BorderStyle.SINGLE, size: 1 },
@@ -68,11 +64,16 @@
 //               left: { style: BorderStyle.SINGLE, size: 1 },
 //               right: { style: BorderStyle.SINGLE, size: 1 },
 //             },
+//             // Add minimum width for Lakk and Guyyaa columns
+//             width:
+//               text === "Lakk" || text === "Guyyaa"
+//                 ? { size: 10, type: WidthType.DXA }
+//                 : undefined,
 //           }),
 //       ),
 //     });
 
-//     // Calculate max content length for each column to help with auto-sizing
+//     // Calculate max content length for each column
 //     const columnContentLengths = Array(8).fill(0);
 
 //     // Check header lengths
@@ -139,14 +140,19 @@
 //                 left: { style: BorderStyle.SINGLE, size: 1 },
 //                 right: { style: BorderStyle.SINGLE, size: 1 },
 //               },
+//               // Add minimum width for Lakk and Guyyaa columns in body rows
+//               width:
+//                 colIndex === 0 || colIndex === 6
+//                   ? { size: 10, type: WidthType.DXA }
+//                   : undefined,
 //             }),
 //         ),
 //       });
 //     });
 
-//     // Create the table with AUTO width (content-based)
+//     // Create the table with AUTO width
 //     const table = new Table({
-//       width: { size: 100, type: WidthType.AUTO }, // Changed to AUTO for content-based width
+//       width: { size: 100, type: WidthType.AUTO },
 //       rows: [headerRow, ...bodyRows],
 //       borders: {
 //         top: { style: BorderStyle.SINGLE, size: 1 },
@@ -272,6 +278,8 @@ import {
   VerticalAlign,
   ImageRun,
   BorderStyle,
+  ShadingType,
+  HeadingLevel,
 } from "docx";
 import fs from "fs";
 import path from "path";
@@ -280,45 +288,62 @@ import { UPLOAD_DIR } from "../utils/uploadPath.js";
 export const generateWord = async (report, fileName) => {
   try {
     const validServices = report.services.filter(
-      (s) => s.sector || s.service || s.employee,
+      (s) =>
+        s.sector ||
+        s.service ||
+        s.resource ||
+        s.peopleServed ||
+        s.employee ||
+        s.remark,
     );
 
     const servicesToUse =
       validServices.length > 0
         ? validServices
-        : [
-            {
-              sector: "",
-              service: "",
-              resource: "",
-              peopleServed: "",
-              employee: "",
-              date: "",
-              remark: "",
-            },
-          ];
+        : Array(7).fill({
+            // Default empty rows to match template requirement
+            sector: "",
+            service: "",
+            resource: "",
+            peopleServed: "",
+            employee: "",
+            date: "",
+            remark: "",
+          });
 
-    // Create header row with bold text only (no background)
+    // STYLE CONSTANTS
+    const HEADER_BACKGROUND = "D9D9D9"; // Light Gray
+    const FONT_NAME = "Calibri";
+    const FONT_SIZE = 22; // 11pt
+
+    // Create header row [cite: 1]
     const headerRow = new TableRow({
+      tableHeader: true,
       children: [
-        "Lakk",
-        "Sektara Tajaajila Kenne",
-        "Tajaajila Kenname",
-        "Foddaa",
-        "Bayyina Namoota Tajaajilamani",
-        "Hojjeta Taj. Kenne",
-        "Guyyaa",
-        "Ibsa",
+        { text: "Lakk", width: 5 },
+        { text: "Sektara Tajaajila Kenne", width: 20 },
+        { text: "Tajaajila Kenname", width: 15 },
+        { text: "Foddaa", width: 10 },
+        { text: "Bayyina Namoota Tajaajilamani", width: 10 },
+        { text: "Hojjeta Taj. Kenne", width: 15 },
+        { text: "Guyyaa", width: 10 },
+        { text: "Ibsa", width: 15 },
       ].map(
-        (text) =>
+        (header) =>
           new TableCell({
             children: [
               new Paragraph({
-                text,
+                text: header.text,
                 bold: true,
                 alignment: AlignmentType.CENTER,
+                font: FONT_NAME,
+                size: FONT_SIZE,
               }),
             ],
+            shading: {
+              type: ShadingType.SOLID,
+              fill: HEADER_BACKGROUND,
+            },
             verticalAlign: VerticalAlign.CENTER,
             borders: {
               top: { style: BorderStyle.SINGLE, size: 1 },
@@ -326,95 +351,57 @@ export const generateWord = async (report, fileName) => {
               left: { style: BorderStyle.SINGLE, size: 1 },
               right: { style: BorderStyle.SINGLE, size: 1 },
             },
-            // Add minimum width for Lakk and Guyyaa columns
-            width:
-              text === "Lakk" || text === "Guyyaa"
-                ? { size: 10, type: WidthType.DXA }
-                : undefined,
           }),
       ),
-    });
-
-    // Calculate max content length for each column
-    const columnContentLengths = Array(8).fill(0);
-
-    // Check header lengths
-    const headers = [
-      "Lakk",
-      "Sektara Tajaajila Kenne",
-      "Tajaajila Kenname",
-      "Foddaa",
-      "Bayyina Namoota Tajaajilamani",
-      "Hojjeta Taj. Kenne",
-      "Guyyaa",
-      "Ibsa",
-    ];
-    headers.forEach((header, i) => {
-      columnContentLengths[i] = Math.max(
-        columnContentLengths[i],
-        header.length,
-      );
-    });
-
-    // Check data rows
-    servicesToUse.forEach((s) => {
-      const values = [
-        "",
-        s.sector || "",
-        s.service || "",
-        s.resource || "",
-        s.peopleServed?.toString() || "",
-        s.employee || "",
-        s.date ? new Date(s.date).toLocaleDateString("en-CA") : "",
-        s.remark || "",
-      ];
-      values.forEach((val, i) => {
-        columnContentLengths[i] = Math.max(columnContentLengths[i], val.length);
-      });
     });
 
     // Create body rows
     const bodyRows = servicesToUse.map((s, i) => {
       return new TableRow({
         children: [
-          (i + 1).toString(),
-          s.sector || "",
-          s.service || "",
-          s.resource || "",
-          s.peopleServed?.toString() || "",
-          s.employee || "",
-          s.date ? new Date(s.date).toLocaleDateString("en-CA") : "",
-          s.remark || "",
-        ].map(
-          (text, colIndex) =>
-            new TableCell({
-              children: [
-                new Paragraph({
-                  text,
-                  alignment:
-                    colIndex === 0 ? AlignmentType.CENTER : AlignmentType.LEFT,
-                }),
-              ],
-              verticalAlign: VerticalAlign.CENTER,
-              borders: {
-                top: { style: BorderStyle.SINGLE, size: 1 },
-                bottom: { style: BorderStyle.SINGLE, size: 1 },
-                left: { style: BorderStyle.SINGLE, size: 1 },
-                right: { style: BorderStyle.SINGLE, size: 1 },
-              },
-              // Add minimum width for Lakk and Guyyaa columns in body rows
-              width:
-                colIndex === 0 || colIndex === 6
-                  ? { size: 10, type: WidthType.DXA }
-                  : undefined,
-            }),
-        ),
+          // Lakk
+          new TableCell({
+            children: [
+              new Paragraph({
+                text: (i + 1).toString(),
+                alignment: AlignmentType.CENTER,
+                font: FONT_NAME,
+                size: FONT_SIZE,
+              }),
+            ],
+            verticalAlign: VerticalAlign.CENTER,
+            borders: {
+              /* borders */
+            },
+          }),
+          // Sectara, Service, etc.
+          ...[
+            s.sector || "",
+            s.service || "",
+            s.resource || "",
+            s.peopleServed?.toString() || "",
+            s.employee || "",
+            s.date ? new Date(s.date).toLocaleDateString("en-CA") : "",
+            s.remark || "",
+          ].map(
+            (text) =>
+              new TableCell({
+                children: [
+                  new Paragraph({ text, font: FONT_NAME, size: FONT_SIZE }),
+                ],
+                verticalAlign: VerticalAlign.CENTER,
+                borders: {
+                  /* borders */
+                },
+              }),
+          ),
+        ],
       });
     });
 
-    // Create the table with AUTO width
+    // Create the table with PERCENTAGE width for beauty
     const table = new Table({
-      width: { size: 100, type: WidthType.AUTO },
+      width: { size: 100, type: WidthType.PERCENTAGE },
       rows: [headerRow, ...bodyRows],
       borders: {
         top: { style: BorderStyle.SINGLE, size: 1 },
@@ -431,30 +418,37 @@ export const generateWord = async (report, fileName) => {
       // Title
       new Paragraph({
         text: "GABAASAA",
-        heading: "Heading1",
+        heading: HeadingLevel.HEADING_1,
         alignment: AlignmentType.CENTER,
-        spacing: { after: 200 },
+        font: FONT_NAME,
+        spacing: { after: 300 },
       }),
 
       // Table
       table,
 
       // Spacing after table
-      new Paragraph({ text: "", spacing: { after: 200 } }),
+      new Paragraph({ text: "", spacing: { after: 400 } }),
     ];
 
-    // Add coordinator info
+    // Add coordinator info and signature area [cite: 2, 3, 4]
     children.push(
       new Paragraph({
-        text: `Maqaa Qindeessaa: ${report.coordinatorName || ""}`,
-        spacing: { after: 100 },
+        text: `Maqaa Qindeessaa: ${report.coordinatorName || "________________"}`,
+        font: FONT_NAME,
+        size: FONT_SIZE,
+        spacing: { after: 150 },
       }),
       new Paragraph({
-        text: `Guyyaa: ${report.coordinatorDate || ""}`,
-        spacing: { after: 100 },
+        text: `Guyyaa: ${report.coordinatorDate || "_________________"}`,
+        font: FONT_NAME,
+        size: FONT_SIZE,
+        spacing: { after: 150 },
       }),
       new Paragraph({
         text: "Mallattoo:",
+        font: FONT_NAME,
+        size: FONT_SIZE,
         spacing: { after: 50 },
       }),
     );
@@ -463,7 +457,6 @@ export const generateWord = async (report, fileName) => {
     if (report.signatureImagePath && fs.existsSync(report.signatureImagePath)) {
       try {
         const imageBuffer = fs.readFileSync(report.signatureImagePath);
-
         children.push(
           new Paragraph({
             children: [
@@ -501,10 +494,10 @@ export const generateWord = async (report, fileName) => {
           properties: {
             page: {
               margin: {
-                top: 1440,
-                bottom: 1440,
-                left: 1440,
-                right: 1440,
+                top: 720, // 0.5 inch
+                bottom: 720,
+                left: 720,
+                right: 720,
               },
             },
           },
