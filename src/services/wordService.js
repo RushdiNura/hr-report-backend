@@ -298,225 +298,154 @@ export const generateWord = async (report, fileName) => {
     );
 
     const servicesToUse =
-      validServices.length > 0
-        ? validServices
-        : Array(7).fill({
-            // Default empty rows to match template requirement
-            sector: "",
-            service: "",
-            resource: "",
-            peopleServed: "",
-            employee: "",
-            date: "",
-            remark: "",
-          });
+      validServices.length > 0 ? validServices : Array(7).fill({});
 
-    // STYLE CONSTANTS
-    const HEADER_BACKGROUND = "D9D9D9"; // Light Gray
     const FONT_NAME = "Calibri";
-    const FONT_SIZE = 22; // 11pt
+    const FONT_SIZE = 22;
+    const colWidths = [5, 20, 15, 10, 10, 15, 10, 15];
 
-    // Create header row [cite: 1]
+    const cellBorders = {
+      top: { style: BorderStyle.SINGLE, size: 1 },
+      bottom: { style: BorderStyle.SINGLE, size: 1 },
+      left: { style: BorderStyle.SINGLE, size: 1 },
+      right: { style: BorderStyle.SINGLE, size: 1 },
+    };
+
+    // Header Row
     const headerRow = new TableRow({
       tableHeader: true,
       children: [
-        { text: "Lakk", width: 5 },
-        { text: "Sektara Tajaajila Kenne", width: 20 },
-        { text: "Tajaajila Kenname", width: 15 },
-        { text: "Foddaa", width: 10 },
-        { text: "Bayyina Namoota Tajaajilamani", width: 10 },
-        { text: "Hojjeta Taj. Kenne", width: 15 },
-        { text: "Guyyaa", width: 10 },
-        { text: "Ibsa", width: 15 },
+        "Lakk",
+        "Sektara Tajaajila Kenne",
+        "Tajaajila Kenname",
+        "Foddaa",
+        "Bayyina Namoota Tajaajilamani",
+        "Hojjeta Taj. Kenne",
+        "Guyyaa",
+        "Ibsa",
       ].map(
-        (header) =>
+        (text, i) =>
           new TableCell({
+            width: { size: colWidths[i], type: WidthType.PERCENTAGE },
+            shading: { type: ShadingType.SOLID, fill: "D9D9D9" },
+            verticalAlign: VerticalAlign.CENTER,
+            borders: cellBorders,
             children: [
               new Paragraph({
-                text: header.text,
+                text,
                 bold: true,
                 alignment: AlignmentType.CENTER,
                 font: FONT_NAME,
                 size: FONT_SIZE,
               }),
             ],
-            shading: {
-              type: ShadingType.SOLID,
-              fill: HEADER_BACKGROUND,
-            },
-            verticalAlign: VerticalAlign.CENTER,
-            borders: {
-              top: { style: BorderStyle.SINGLE, size: 1 },
-              bottom: { style: BorderStyle.SINGLE, size: 1 },
-              left: { style: BorderStyle.SINGLE, size: 1 },
-              right: { style: BorderStyle.SINGLE, size: 1 },
-            },
           }),
       ),
     });
 
-    // Create body rows
+    // Body Rows
     const bodyRows = servicesToUse.map((s, i) => {
+      let formattedDate = "";
+      try {
+        formattedDate = s.date
+          ? new Date(s.date).toLocaleDateString("en-CA")
+          : "";
+      } catch {
+        formattedDate = "";
+      }
+
+      const rowData = [
+        (i + 1).toString(),
+        s.sector || "",
+        s.service || "",
+        s.resource || "",
+        s.peopleServed?.toString() || "",
+        s.employee || "",
+        formattedDate,
+        s.remark || "",
+      ];
+
       return new TableRow({
-        children: [
-          // Lakk
-          new TableCell({
-            children: [
-              new Paragraph({
-                text: (i + 1).toString(),
-                alignment: AlignmentType.CENTER,
-                font: FONT_NAME,
-                size: FONT_SIZE,
-              }),
-            ],
-            verticalAlign: VerticalAlign.CENTER,
-            borders: {
-              /* borders */
-            },
-          }),
-          // Sectara, Service, etc.
-          ...[
-            s.sector || "",
-            s.service || "",
-            s.resource || "",
-            s.peopleServed?.toString() || "",
-            s.employee || "",
-            s.date ? new Date(s.date).toLocaleDateString("en-CA") : "",
-            s.remark || "",
-          ].map(
-            (text) =>
-              new TableCell({
-                children: [
-                  new Paragraph({ text, font: FONT_NAME, size: FONT_SIZE }),
-                ],
-                verticalAlign: VerticalAlign.CENTER,
-                borders: {
-                  /* borders */
-                },
-              }),
-          ),
-        ],
+        children: rowData.map(
+          (text, index) =>
+            new TableCell({
+              width: { size: colWidths[index], type: WidthType.PERCENTAGE },
+              borders: cellBorders,
+              verticalAlign: VerticalAlign.CENTER,
+              children: [
+                new Paragraph({
+                  text,
+                  alignment:
+                    index === 0 ? AlignmentType.CENTER : AlignmentType.LEFT,
+                  font: FONT_NAME,
+                  size: FONT_SIZE,
+                }),
+              ],
+            }),
+        ),
       });
     });
 
-    // Create the table with PERCENTAGE width for beauty
-    const table = new Table({
-      width: { size: 100, type: WidthType.PERCENTAGE },
-      rows: [headerRow, ...bodyRows],
-      borders: {
-        top: { style: BorderStyle.SINGLE, size: 1 },
-        bottom: { style: BorderStyle.SINGLE, size: 1 },
-        left: { style: BorderStyle.SINGLE, size: 1 },
-        right: { style: BorderStyle.SINGLE, size: 1 },
-        insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
-        insideVertical: { style: BorderStyle.SINGLE, size: 1 },
-      },
-    });
-
-    // Prepare document children array
-    const children = [
-      // Title
-      new Paragraph({
-        text: "GABAASAA",
-        heading: HeadingLevel.HEADING_1,
-        alignment: AlignmentType.CENTER,
-        font: FONT_NAME,
-        spacing: { after: 300 },
-      }),
-
-      // Table
-      table,
-
-      // Spacing after table
-      new Paragraph({ text: "", spacing: { after: 400 } }),
-    ];
-
-    // Add coordinator info and signature area [cite: 2, 3, 4]
-    children.push(
-      new Paragraph({
-        text: `Maqaa Qindeessaa: ${report.coordinatorName || "________________"}`,
-        font: FONT_NAME,
-        size: FONT_SIZE,
-        spacing: { after: 150 },
-      }),
-      new Paragraph({
-        text: `Guyyaa: ${report.coordinatorDate || "_________________"}`,
-        font: FONT_NAME,
-        size: FONT_SIZE,
-        spacing: { after: 150 },
-      }),
-      new Paragraph({
-        text: "Mallattoo:",
-        font: FONT_NAME,
-        size: FONT_SIZE,
-        spacing: { after: 50 },
-      }),
-    );
-
-    // Add signature image if exists
-    if (report.signatureImagePath && fs.existsSync(report.signatureImagePath)) {
-      try {
-        const imageBuffer = fs.readFileSync(report.signatureImagePath);
-        children.push(
-          new Paragraph({
-            children: [
-              new ImageRun({
-                data: imageBuffer,
-                transformation: { width: 150, height: 60 },
-                type: "png",
-              }),
-            ],
-            spacing: { before: 50, after: 50 },
-          }),
-        );
-      } catch (imgError) {
-        console.error("Error adding signature image:", imgError);
-        children.push(
-          new Paragraph({
-            text: "______________________",
-            spacing: { before: 50, after: 50 },
-          }),
-        );
-      }
-    } else {
-      children.push(
-        new Paragraph({
-          text: "______________________",
-          spacing: { before: 50, after: 50 },
-        }),
-      );
-    }
-
-    // Create document with proper sections
     const doc = new Document({
       sections: [
         {
           properties: {
-            page: {
-              margin: {
-                top: 720, // 0.5 inch
-                bottom: 720,
-                left: 720,
-                right: 720,
-              },
-            },
+            page: { margin: { top: 720, bottom: 720, left: 720, right: 720 } },
           },
-          children: children,
+          children: [
+            new Paragraph({
+              text: "GABAASAA",
+              heading: HeadingLevel.HEADING_1,
+              alignment: AlignmentType.CENTER,
+              font: FONT_NAME,
+              size: 28,
+              spacing: { after: 300 },
+            }),
+            new Table({
+              width: { size: 100, type: WidthType.PERCENTAGE },
+              rows: [headerRow, ...bodyRows],
+            }),
+            new Paragraph({ text: "", spacing: { before: 400 } }),
+            new Paragraph({
+              text: `Maqaa Qindeessaa: ${report.coordinatorName || "________________"}`,
+              font: FONT_NAME,
+              size: FONT_SIZE,
+            }),
+            new Paragraph({
+              text: `Guyyaa: ${report.coordinatorDate || "_________________"}`,
+              font: FONT_NAME,
+              size: FONT_SIZE,
+            }),
+            new Paragraph({
+              text: "Mallattoo:",
+              font: FONT_NAME,
+              size: FONT_SIZE,
+            }),
+            // Signature Logic
+            ...(report.signatureImagePath &&
+            fs.existsSync(report.signatureImagePath)
+              ? [
+                  new Paragraph({
+                    children: [
+                      new ImageRun({
+                        data: fs.readFileSync(report.signatureImagePath),
+                        transformation: { width: 150, height: 60 },
+                        type: "png",
+                      }),
+                    ],
+                  }),
+                ]
+              : [new Paragraph({ text: "______________________" })]),
+          ],
         },
       ],
     });
 
-    // Generate buffer
     const buffer = await Packer.toBuffer(doc);
-
-    // Save to file
     const filePath = path.join(UPLOAD_DIR, fileName);
     fs.writeFileSync(filePath, buffer);
-
-    console.log(`✅ Word document generated: ${fileName}`);
     return filePath;
   } catch (error) {
-    console.error("❌ Error generating Word document:", error);
     throw error;
   }
 };
