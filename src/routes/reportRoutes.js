@@ -28,7 +28,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// ===== ROUTES =====
+
 router.post(
   "/",
   authMiddleware,

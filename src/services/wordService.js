@@ -36,15 +36,15 @@ export const generateWord = async (report, fileName) => {
             },
           ];
 
-    // Create header row with bold text only (no background)
+
     const headerRow = new TableRow({
       children: [
         "Lakk",
-        "Sektara Tajaajila Kenne",
+        "Seektara Tajaajila Kenne",
         "Tajaajila Kenname",
         "Foddaa",
-        "Bayyina Namoota Tajaajilamani",
-        "Hojjeta Taj. Kenne",
+        "Baayyina Namoota Tajaajilamani",
+        "Hojjetaa Taj. Kenne",
         "Guyyaa",
         "Ibsa",
       ].map(
@@ -64,7 +64,6 @@ export const generateWord = async (report, fileName) => {
               left: { style: BorderStyle.SINGLE, size: 1 },
               right: { style: BorderStyle.SINGLE, size: 1 },
             },
-            // Add minimum width for Lakk and Guyyaa columns
             width:
               text === "Lakk" || text === "Guyyaa"
                 ? { size: 10, type: WidthType.DXA }
@@ -73,17 +72,16 @@ export const generateWord = async (report, fileName) => {
       ),
     });
 
-    // Calculate max content length for each column
     const columnContentLengths = Array(8).fill(0);
 
-    // Check header lengths
+  
     const headers = [
       "Lakk",
-      "Sektara Tajaajila Kenne",
+      "Seektara Tajaajila Kenne",
       "Tajaajila Kenname",
       "Foddaa",
-      "Bayyina Namoota Tajaajilamani",
-      "Hojjeta Taj. Kenne",
+      "Baayyina Namoota Tajaajilamani",
+      "Hojjetaa Taj. Kenne",
       "Guyyaa",
       "Ibsa",
     ];
@@ -94,7 +92,6 @@ export const generateWord = async (report, fileName) => {
       );
     });
 
-    // Check data rows
     servicesToUse.forEach((s) => {
       const values = [
         "",
@@ -111,7 +108,6 @@ export const generateWord = async (report, fileName) => {
       });
     });
 
-    // Create body rows
     const bodyRows = servicesToUse.map((s, i) => {
       return new TableRow({
         children: [
@@ -140,7 +136,6 @@ export const generateWord = async (report, fileName) => {
                 left: { style: BorderStyle.SINGLE, size: 1 },
                 right: { style: BorderStyle.SINGLE, size: 1 },
               },
-              // Add minimum width for Lakk and Guyyaa columns in body rows
               width:
                 colIndex === 0 || colIndex === 6
                   ? { size: 10, type: WidthType.DXA }
@@ -150,7 +145,6 @@ export const generateWord = async (report, fileName) => {
       });
     });
 
-    // Create the table with AUTO width
     const table = new Table({
       width: { size: 100, type: WidthType.AUTO },
       rows: [headerRow, ...bodyRows],
@@ -164,24 +158,19 @@ export const generateWord = async (report, fileName) => {
       },
     });
 
-    // Prepare document children array
     const children = [
-      // Title
       new Paragraph({
-        text: "GABAASAA",
+        text: "GABAASA",
         heading: "Heading1",
         alignment: AlignmentType.CENTER,
         spacing: { after: 200 },
       }),
 
-      // Table
       table,
 
-      // Spacing after table
       new Paragraph({ text: "", spacing: { after: 200 } }),
     ];
 
-    // Add coordinator info
     children.push(
       new Paragraph({
         text: `Maqaa Qindeessaa: ${report.coordinatorName || ""}`,
@@ -197,7 +186,6 @@ export const generateWord = async (report, fileName) => {
       }),
     );
 
-    // Add signature image if exists
     if (report.signatureImagePath && fs.existsSync(report.signatureImagePath)) {
       try {
         const imageBuffer = fs.readFileSync(report.signatureImagePath);
@@ -232,7 +220,6 @@ export const generateWord = async (report, fileName) => {
       );
     }
 
-    // Create document with proper sections
     const doc = new Document({
       sections: [
         {
@@ -251,10 +238,8 @@ export const generateWord = async (report, fileName) => {
       ],
     });
 
-    // Generate buffer
     const buffer = await Packer.toBuffer(doc);
 
-    // Save to file
     const filePath = path.join(UPLOAD_DIR, fileName);
     fs.writeFileSync(filePath, buffer);
 

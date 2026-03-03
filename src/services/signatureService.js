@@ -15,7 +15,6 @@ if (!fs.existsSync(signaturesDir)) {
 export const saveSignatureImage = (base64Data) => {
   return new Promise((resolve, reject) => {
     try {
-      // Extract the base64 data (remove data:image/png;base64, prefix)
       const matches = base64Data.match(
         /^data:image\/([A-Za-z-+\/]+);base64,(.+)$/,
       );
@@ -27,11 +26,9 @@ export const saveSignatureImage = (base64Data) => {
       const imageType = matches[1];
       const base64Image = matches[2];
 
-      // Create unique filename
       const fileName = `signature_${Date.now()}_${uuidv4()}.${imageType}`;
       const filePath = path.join(signaturesDir, fileName);
 
-      // Convert base64 to buffer and save
       const imageBuffer = Buffer.from(base64Image, "base64");
       fs.writeFileSync(filePath, imageBuffer);
 

@@ -11,7 +11,6 @@ export const register = async (req, res) => {
 
     const hashed = await bcrypt.hash(password, 10);
 
-    // Prepare user object
     const userFields = {
       name,
       email,
@@ -55,7 +54,6 @@ export const login = async (req, res) => {
       token,
       role: user.role,
       name: user.name,
-      // If HR, this will naturally be undefined/null in the DB
       qindeessaa: user.qindeessaa || null,
     });
   } catch (e) {

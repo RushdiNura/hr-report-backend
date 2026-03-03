@@ -3,7 +3,6 @@ import path from "path";
 import { UPLOAD_DIR } from "../utils/uploadPath.js";
 
 export const generateExcel = (report, fileName) => {
-  // ===== TABLE HEADER =====
   const header = [
     [
       "Lakk",
@@ -17,7 +16,6 @@ export const generateExcel = (report, fileName) => {
     ],
   ];
 
-  // ===== TABLE ROWS (ONLY FILLED) =====
   const rows = report.services.map((s, i) => [
     i + 1,
     s.sector || "",
@@ -33,7 +31,6 @@ export const generateExcel = (report, fileName) => {
 
   const ws = XLSX.utils.aoa_to_sheet(data);
 
-  // ===== AUTO COLUMN WIDTH =====
   const colWidths = data[0].map((_, colIndex) => {
     const maxLength = data.reduce((max, row) => {
       const cell = row[colIndex] ? row[colIndex].toString() : "";
@@ -44,7 +41,7 @@ export const generateExcel = (report, fileName) => {
 
   ws["!cols"] = colWidths;
 
-  // ===== FOOTER BELOW TABLE =====
+
   const footerStartRow = data.length + 2;
 
   XLSX.utils.sheet_add_aoa(
@@ -57,7 +54,7 @@ export const generateExcel = (report, fileName) => {
     { origin: `A${footerStartRow}` },
   );
 
-  // ===== CREATE FILE =====
+ 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Gabaasaa");
 
