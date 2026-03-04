@@ -20,8 +20,8 @@ const formatDateToDDMMYY = (dateString) => {
   if (!dateString) return "";
   try {
     const d = new Date(dateString);
-    const day = d.getDate().toString().padStart(2, '0');
-    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const day = d.getDate().toString().padStart(2, "0");
+    const month = (d.getMonth() + 1).toString().padStart(2, "0");
     const year = d.getFullYear().toString().slice(-2);
     return `${day}/${month}/${year}`;
   } catch {
@@ -50,8 +50,6 @@ export const generateWord = async (report, fileName) => {
             },
           ];
 
-          
-
     const headerRow = new TableRow({
       children: [
         "Lakk",
@@ -79,17 +77,16 @@ export const generateWord = async (report, fileName) => {
               left: { style: BorderStyle.SINGLE, size: 1 },
               right: { style: BorderStyle.SINGLE, size: 1 },
             },
-            width:
-              text === "Lakk" || text === "Guyyaa"
-                ? { size: 10, type: WidthType.DXA }
-                : undefined,
+            // width:
+            //   text === "Lakk" || text === "Guyyaa"
+            //     ? { size: 10, type: WidthType.DXA }
+            //     : undefined,
           }),
       ),
     });
 
     const columnContentLengths = Array(8).fill(0);
 
-  
     const headers = [
       "Lakk",
       "Seektara Tajaajila Kenne",
@@ -142,6 +139,7 @@ export const generateWord = async (report, fileName) => {
                   text,
                   alignment:
                     colIndex === 0 ? AlignmentType.CENTER : AlignmentType.LEFT,
+                  spacing: { before: 50, after: 50 },
                 }),
               ],
               verticalAlign: VerticalAlign.CENTER,
@@ -151,17 +149,44 @@ export const generateWord = async (report, fileName) => {
                 left: { style: BorderStyle.SINGLE, size: 1 },
                 right: { style: BorderStyle.SINGLE, size: 1 },
               },
-              width:
-                colIndex === 0 || colIndex === 6
-                  ? { size: 10, type: WidthType.DXA }
-                  : undefined,
+              // width:
+              //   colIndex === 0 || colIndex === 6
+              //     ? { size: 10, type: WidthType.DXA }
+              //     : undefined,
             }),
         ),
       });
     });
 
+    // const table = new Table({
+    //   width: { size: 100, type: WidthType.AUTO },
+    //   rows: [headerRow, ...bodyRows],
+    //   borders: {
+    //     top: { style: BorderStyle.SINGLE, size: 1 },
+    //     bottom: { style: BorderStyle.SINGLE, size: 1 },
+    //     left: { style: BorderStyle.SINGLE, size: 1 },
+    //     right: { style: BorderStyle.SINGLE, size: 1 },
+    //     insideHorizontal: { style: BorderStyle.SINGLE, size: 1 },
+    //     insideVertical: { style: BorderStyle.SINGLE, size: 1 },
+    //   },
+    // });
+
     const table = new Table({
-      width: { size: 100, type: WidthType.AUTO },
+      width: {
+        size: 100,
+        type: WidthType.PERCENTAGE,
+      },
+      // check the comment
+      columnWidths: [
+        5, // Lakk
+        15, // Sector
+        15, // Service
+        10, // Resource
+        10, // People
+        15, // Employee
+        10, // Date
+        20, // Remark
+      ],
       rows: [headerRow, ...bodyRows],
       borders: {
         top: { style: BorderStyle.SINGLE, size: 1 },
@@ -192,7 +217,8 @@ export const generateWord = async (report, fileName) => {
         spacing: { after: 100 },
       }),
       new Paragraph({
-        text: `Guyyaa: ${formatDateToDDMMYY(report.coordinatorDate)}`}),
+        text: `Guyyaa: ${formatDateToDDMMYY(report.coordinatorDate)}`,
+      }),
       new Paragraph({
         text: "Mallattoo:",
         spacing: { after: 50 },
@@ -263,187 +289,3 @@ export const generateWord = async (report, fileName) => {
     throw error;
   }
 };
-
-// import {
-//   Document,
-//   Packer,
-//   Paragraph,
-//   Table,
-//   TableRow,
-//   TableCell,
-//   WidthType,
-//   AlignmentType,
-//   VerticalAlign,
-//   ImageRun,
-//   BorderStyle,
-//   ShadingType,
-//   HeadingLevel,
-// } from "docx";
-// import fs from "fs";
-// import path from "path";
-// import { UPLOAD_DIR } from "../utils/uploadPath.js";
-
-// export const generateWord = async (report, fileName) => {
-//   try {
-//     const validServices = report.services.filter(
-//       (s) =>
-//         s.sector ||
-//         s.service ||
-//         s.resource ||
-//         s.peopleServed ||
-//         s.employee ||
-//         s.remark,
-//     );
-
-//     const servicesToUse =
-//       validServices.length > 0 ? validServices : Array(7).fill({});
-
-//     const FONT_NAME = "Calibri";
-//     const FONT_SIZE = 22;
-//     const colWidths = [5, 20, 15, 10, 10, 15, 10, 15];
-
-//     const cellBorders = {
-//       top: { style: BorderStyle.SINGLE, size: 1 },
-//       bottom: { style: BorderStyle.SINGLE, size: 1 },
-//       left: { style: BorderStyle.SINGLE, size: 1 },
-//       right: { style: BorderStyle.SINGLE, size: 1 },
-//     };
-
-//     // Header Row
-//     const headerRow = new TableRow({
-//       tableHeader: true,
-//       children: [
-//         "Lakk",
-//         "Sektara Tajaajila Kenne",
-//         "Tajaajila Kenname",
-//         "Foddaa",
-//         "Bayyina Namoota Tajaajilamani",
-//         "Hojjeta Taj. Kenne",
-//         "Guyyaa",
-//         "Ibsa",
-//       ].map(
-//         (text, i) =>
-//           new TableCell({
-//             width: { size: colWidths[i], type: WidthType.PERCENTAGE },
-//             shading: { type: ShadingType.SOLID, fill: "D9D9D9" },
-//             verticalAlign: VerticalAlign.CENTER,
-//             borders: cellBorders,
-//             children: [
-//               new Paragraph({
-//                 text,
-//                 bold: true,
-//                 alignment: AlignmentType.CENTER,
-//                 font: FONT_NAME,
-//                 size: FONT_SIZE,
-//               }),
-//             ],
-//           }),
-//       ),
-//     });
-
-//     // Body Rows
-//     const bodyRows = servicesToUse.map((s, i) => {
-//       let formattedDate = "";
-//       try {
-//         formattedDate = s.date
-//           ? new Date(s.date).toLocaleDateString("en-CA")
-//           : "";
-//       } catch {
-//         formattedDate = "";
-//       }
-
-//       const rowData = [
-//         (i + 1).toString(),
-//         s.sector || "",
-//         s.service || "",
-//         s.resource || "",
-//         s.peopleServed?.toString() || "",
-//         s.employee || "",
-//         formattedDate,
-//         s.remark || "",
-//       ];
-
-//       return new TableRow({
-//         children: rowData.map(
-//           (text, index) =>
-//             new TableCell({
-//               width: { size: colWidths[index], type: WidthType.PERCENTAGE },
-//               borders: cellBorders,
-//               verticalAlign: VerticalAlign.CENTER,
-//               children: [
-//                 new Paragraph({
-//                   text,
-//                   alignment:
-//                     index === 0 ? AlignmentType.CENTER : AlignmentType.LEFT,
-//                   font: FONT_NAME,
-//                   size: FONT_SIZE,
-//                 }),
-//               ],
-//             }),
-//         ),
-//       });
-//     });
-
-//     const doc = new Document({
-//       sections: [
-//         {
-//           properties: {
-//             page: { margin: { top: 720, bottom: 720, left: 720, right: 720 } },
-//           },
-//           children: [
-//             new Paragraph({
-//               text: "GABAASAA",
-//               heading: HeadingLevel.HEADING_1,
-//               alignment: AlignmentType.CENTER,
-//               font: FONT_NAME,
-//               size: 28,
-//               spacing: { after: 300 },
-//             }),
-//             new Table({
-//               width: { size: 100, type: WidthType.PERCENTAGE },
-//               rows: [headerRow, ...bodyRows],
-//             }),
-//             new Paragraph({ text: "", spacing: { before: 400 } }),
-//             new Paragraph({
-//               text: `Maqaa Qindeessaa: ${report.coordinatorName || "________________"}`,
-//               font: FONT_NAME,
-//               size: FONT_SIZE,
-//             }),
-//             new Paragraph({
-//               text: `Guyyaa: ${report.coordinatorDate || "_________________"}`,
-//               font: FONT_NAME,
-//               size: FONT_SIZE,
-//             }),
-//             new Paragraph({
-//               text: "Mallattoo:",
-//               font: FONT_NAME,
-//               size: FONT_SIZE,
-//             }),
-//             // Signature Logic
-//             ...(report.signatureImagePath &&
-//             fs.existsSync(report.signatureImagePath)
-//               ? [
-//                   new Paragraph({
-//                     children: [
-//                       new ImageRun({
-//                         data: fs.readFileSync(report.signatureImagePath),
-//                         transformation: { width: 150, height: 60 },
-//                         type: "png",
-//                       }),
-//                     ],
-//                   }),
-//                 ]
-//               : [new Paragraph({ text: "______________________" })]),
-//           ],
-//         },
-//       ],
-//     });
-
-//     const buffer = await Packer.toBuffer(doc);
-//     const filePath = path.join(UPLOAD_DIR, fileName);
-//     fs.writeFileSync(filePath, buffer);
-//     return filePath;
-//   } catch (error) {
-//     throw error;
-//   }
-// };
