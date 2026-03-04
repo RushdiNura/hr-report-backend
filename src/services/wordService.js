@@ -15,6 +15,20 @@ import fs from "fs";
 import path from "path";
 import { UPLOAD_DIR } from "../utils/uploadPath.js";
 
+// Add this helper function at the top, after imports
+const formatDateToDDMMYY = (dateString) => {
+  if (!dateString) return "";
+  try {
+    const d = new Date(dateString);
+    const day = d.getDate().toString().padStart(2, '0');
+    const month = (d.getMonth() + 1).toString().padStart(2, '0');
+    const year = d.getFullYear().toString().slice(-2);
+    return `${day}/${month}/${year}`;
+  } catch {
+    return "";
+  }
+};
+
 export const generateWord = async (report, fileName) => {
   try {
     const validServices = report.services.filter(
@@ -36,6 +50,7 @@ export const generateWord = async (report, fileName) => {
             },
           ];
 
+          
 
     const headerRow = new TableRow({
       children: [
@@ -100,7 +115,7 @@ export const generateWord = async (report, fileName) => {
         s.resource || "",
         s.peopleServed?.toString() || "",
         s.employee || "",
-        s.date ? new Date(s.date).toLocaleDateString("en-CA") : "",
+        s.date ? formatDateToDDMMYY(s.date) : "",
         s.remark || "",
       ];
       values.forEach((val, i) => {
@@ -117,7 +132,7 @@ export const generateWord = async (report, fileName) => {
           s.resource || "",
           s.peopleServed?.toString() || "",
           s.employee || "",
-          s.date ? new Date(s.date).toLocaleDateString("en-CA") : "",
+          s.date ? formatDateToDDMMYY(s.date) : "",
           s.remark || "",
         ].map(
           (text, colIndex) =>
@@ -177,9 +192,7 @@ export const generateWord = async (report, fileName) => {
         spacing: { after: 100 },
       }),
       new Paragraph({
-        text: `Guyyaa: ${report.coordinatorDate || ""}`,
-        spacing: { after: 100 },
-      }),
+        text: `Guyyaa: ${formatDateToDDMMYY(report.coordinatorDate)}`}),
       new Paragraph({
         text: "Mallattoo:",
         spacing: { after: 50 },
