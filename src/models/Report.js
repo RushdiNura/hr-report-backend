@@ -40,8 +40,16 @@ const reportSchema = new mongoose.Schema(
         "foddaa12",
       ],
     },
+    extractedTotal: {
+      type: Number,
+      default: null,
+    },
+    extractedPeopleCounts: {
+      type: [Number],
+      default: [],
+    },
     signatureImage: {
-      type: String, 
+      type: String,
     },
     generatedFileName: {
       type: String,
