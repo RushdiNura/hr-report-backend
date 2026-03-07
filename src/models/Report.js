@@ -57,6 +57,15 @@ const reportSchema = new mongoose.Schema(
     uploadedFileName: {
       type: String,
     },
+    generatedFileUrl: {
+      type: String,
+    },
+    generatedFilePublicId: {
+      type: String, // For generating signed URLs later
+    },
+    uploadedFileUrl: {
+      type: String, // For user-uploaded files
+    },
   },
   { timestamps: true },
 );
