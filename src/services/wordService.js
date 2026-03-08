@@ -15,7 +15,7 @@ import fs from "fs";
 import path from "path";
 import { UPLOAD_DIR } from "../utils/uploadPath.js";
 
-// Add this helper function at the top, after imports
+
 const formatDateToDDMMYY = (dateString) => {
   if (!dateString) return "";
   try {
