@@ -59,7 +59,7 @@ import { fileURLToPath } from "url";
 
 import authRoutes from "./src/routes/authRoutes.js";
 import reportRoutes from "./src/routes/reportRoutes.js";
-import employeeRoutes from ".src/routes/employeeRoutes.js";
+import employeeRoutes from "./employeeRoutes.js";
 
 dotenv.config();
 connectDB();
