@@ -59,6 +59,7 @@ import { fileURLToPath } from "url";
 
 import authRoutes from "./src/routes/authRoutes.js";
 import reportRoutes from "./src/routes/reportRoutes.js";
+import employeeRoutes from ".src//routes/employeeRoutes.js";
 
 dotenv.config();
 connectDB();
@@ -91,6 +92,7 @@ app.use(
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/employees", employeeRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
