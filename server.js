@@ -133,5 +133,5 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-// Use httpServer instead of app.listen
+// Use httpServer instead of app.listen it is good for socket.io
 httpServer.listen(PORT, () => console.log(`🚀 Server running on ${PORT}`));
