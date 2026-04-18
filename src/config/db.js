@@ -11,16 +11,20 @@
 // };
 
 // export default connectDB;
-
 import mongoose from "mongoose";
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    const conn = await mongoose.connect(process.env.MONGO_URI, {
+      serverSelectionTimeoutMS: 5000,
+    });
+
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error(`DB error: ${error.message}`);
-    process.exit(1);
+    console.error("❌ DB ERROR:", error.message);
+
+    // 🔥 IMPORTANT: do NOT crash app
+    // process.exit(1); ❌ REMOVE THIS IF YOU HAVE IT
   }
 };
 

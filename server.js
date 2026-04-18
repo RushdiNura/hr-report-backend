@@ -119,6 +119,7 @@ app.use(
   "/files/signatures",
   express.static(path.join(__dirname, "uploads/signatures")),
 );
+console.log("MONGO_URI:", process.env.MONGO_URI);
 
 // Routes
 app.use("/api/auth", authRoutes);
