@@ -28,13 +28,11 @@ export const getMyEmployees = async (req, res) => {
       createdBy: req.user.id,
       qindeessaa: req.user.qindeessaa,
     }).sort({ createdAt: -1 });
-
     res.json(employees);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-
 // Delete employee
 export const deleteEmployee = async (req, res) => {
   try {
@@ -48,7 +46,6 @@ export const deleteEmployee = async (req, res) => {
     if (!employee) {
       return res.status(404).json({ message: "Employee not found" });
     }
-
     res.json({ message: "Employee deleted successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
