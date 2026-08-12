@@ -34,3 +34,4 @@ const employeeSchema = new mongoose.Schema(
 );
 
 export default mongoose.model("Employee", employeeSchema);
+
